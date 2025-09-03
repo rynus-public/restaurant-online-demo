@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,26 @@ import { Plus } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const menuItems = {
+// Define shared menu item types so optional flags (spicy, vegetarian, featured) are recognized across categories
+type MenuCategory = 'recommendations' | 'appetizers' | 'salads' | 'mains' | 'beverages';
+
+interface MenuItem {
+  id: string;
+  name: string;
+  nameEn: string;
+  nameVi: string;
+  description: string;
+  descriptionEn: string;
+  descriptionVi: string;
+  price: number;
+  image: string;
+  category: MenuCategory;
+  featured?: boolean;
+  vegetarian?: boolean;
+  spicy?: boolean;
+}
+
+const menuItems: Record<MenuCategory, MenuItem[]> = {
   recommendations: [
     {
       id: '310-avocado-tatar',
@@ -236,11 +256,11 @@ const menuItems = {
 };
 
 export default function Menu() {
-  const [activeCategory, setActiveCategory] = useState('recommendations');
+  const [activeCategory, setActiveCategory] = useState<MenuCategory>('recommendations');
   const { addItem } = useCart();
   const { t, language } = useLanguage();
 
-  const menuCategories = [
+  const menuCategories: { id: MenuCategory; name: string }[] = [
     { id: 'recommendations', name: t('menu.recommendations') },
     { id: 'appetizers', name: t('menu.appetizers') },
     { id: 'salads', name: t('menu.salads') },
@@ -248,7 +268,7 @@ export default function Menu() {
     { id: 'beverages', name: t('menu.beverages') },
   ];
 
-  const handleAddToCart = (item: any) => {
+  const handleAddToCart = (item: MenuItem) => {
     const itemName = language === 'en' ? item.nameEn : language === 'vi' ? item.nameVi : item.name;
     addItem({
       id: item.id,
@@ -258,11 +278,11 @@ export default function Menu() {
     });
   };
 
-  const getItemName = (item: any) => {
+  const getItemName = (item: MenuItem) => {
     return language === 'en' ? item.nameEn : language === 'vi' ? item.nameVi : item.name;
   };
 
-  const getItemDescription = (item: any) => {
+  const getItemDescription = (item: MenuItem) => {
     return language === 'en' ? item.descriptionEn : language === 'vi' ? item.descriptionVi : item.description;
   };
 
@@ -300,10 +320,13 @@ export default function Menu() {
         {activeCategory === 'recommendations' && (
           <div className="mb-12">
             <div className="relative h-64 rounded-lg overflow-hidden">
-              <img
+              <Image
                 src="https://images.pexels.com/photos/958545/pexels-photo-958545.jpeg"
                 alt="Restaurant recommendations"
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority
               />
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                 <h3 className="text-3xl font-bold text-white font-playfair">
@@ -316,13 +339,15 @@ export default function Menu() {
 
         {/* Menu Items */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {menuItems[activeCategory as keyof typeof menuItems]?.map((item) => (
+          {menuItems[activeCategory]?.map((item) => (
             <Card key={item.id} className="bg-zinc-800 border-zinc-700 overflow-hidden hover:border-amber-400 transition-all duration-300 hover:shadow-lg hover:shadow-amber-400/20">
               <div className="relative h-48 overflow-hidden">
-                <img
+                <Image
                   src={item.image}
                   alt={getItemName(item)}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  fill
+                  className="object-cover hover:scale-105 transition-transform duration-300"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute top-4 right-4 flex gap-2">
                   {item.spicy && (
